@@ -57,7 +57,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Configuration.cs" />
-    <Compile Include="Direction.cs" />
+    <Compile Include="Trend.cs" />
     <Compile Include="Entry.cs" />
     <Compile Include="Ini.cs" />
     <Compile Include="NightscoutClient.cs" />

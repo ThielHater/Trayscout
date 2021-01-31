@@ -1,6 +1,6 @@
 ﻿namespace Trayscout
 {
-    public enum Direction
+    public enum Trend
     {
         None = 0,
         Flat = 50,

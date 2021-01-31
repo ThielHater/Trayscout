@@ -36,7 +36,7 @@ namespace Trayscout
                 _lastAlarm = DateTime.MinValue;
 
                 _timer = new Timer();
-                _timer.Interval = 60 * 1000 * _config.UpdateInterval;
+                _timer.Interval = 1000 * 60 * _config.UpdateInterval;
                 _timer.Tick += (x, y) => Update();
                 _timer.Enabled = true;
 
@@ -115,9 +115,7 @@ namespace Trayscout
 
                 using (Graphics g = Graphics.FromImage(bmp))
                 {
-                    g.TextRenderingHint = TextRenderingHint.SingleBitPerPixel;
-
-                    int sourceOffsetY = 0;
+                    int sourceOffsetY;
                     if (!_config.UseColor)
                     {
                         sourceOffsetY = 0;
@@ -139,11 +137,11 @@ namespace Trayscout
                         g.DrawImage(_symbols, new Rectangle(destOffsetX + i * 5, 8, 5, 8), new Rectangle(entry.Digits[i] * 5, sourceOffsetY, 5, 8), GraphicsUnit.Pixel);
                     }
 
-                    if (entry.Direction != Direction.None)
+                    if (entry.Trend != Trend.None)
                     {
-                        g.DrawImage(_symbols, new Rectangle(10, 0, 5, 8), new Rectangle((int)entry.Direction, sourceOffsetY, 5, 8), GraphicsUnit.Pixel);
-                        if (entry.Direction == Direction.DoubleDown || entry.Direction == Direction.DoubleUp)
-                            g.DrawImage(_symbols, new Rectangle(5, 0, 5, 8), new Rectangle((int)entry.Direction, sourceOffsetY, 5, 8), GraphicsUnit.Pixel);
+                        g.DrawImage(_symbols, new Rectangle(10, 0, 5, 8), new Rectangle((int)entry.Trend, sourceOffsetY, 5, 8), GraphicsUnit.Pixel);
+                        if (entry.Trend == Trend.DoubleDown || entry.Trend == Trend.DoubleUp)
+                            g.DrawImage(_symbols, new Rectangle(5, 0, 5, 8), new Rectangle((int)entry.Trend, sourceOffsetY, 5, 8), GraphicsUnit.Pixel);
                     }
                 }
 
@@ -191,6 +189,7 @@ namespace Trayscout
                 _trayIcon.Dispose();
             }
             _timer?.Dispose();
+            _symbols?.Dispose();
             Application.Exit();
         }
     }

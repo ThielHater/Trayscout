@@ -9,7 +9,7 @@ namespace Trayscout
         public DateTime Timestamp { get; }
         public int Value { get; }
         public IList<short> Digits { get; }
-        public Direction Direction { get; set; }
+        public Trend Trend { get; set; }
 
         public Entry(string line)
         {
@@ -19,9 +19,9 @@ namespace Trayscout
                 Timestamp = DateTime.Parse(split[0]);
                 Value = int.Parse(split[2]);
                 Digits = split[2].Select(x => short.Parse(x.ToString())).ToList();
-                if (!Enum.TryParse(split[3], out Direction direction))
-                    direction = Direction.None;
-                Direction = direction;
+                if (!Enum.TryParse(split[3], out Trend trend))
+                    trend = Trend.None;
+                Trend = trend;
             }
         }
     }
