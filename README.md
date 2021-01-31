@@ -13,4 +13,19 @@ A simple INI file, which can be edited using Notepad for example, is used for co
 - UseAlarm = Wether to play an alarm sound when out of normal range
 - AlarmInterval = Alarm interval in minutes
 
-If you like, you can change the font/color and the alarm sound by editing or replacing the corresponding files.
+How to use:
+- Extract the Trayscout.zip into a folder of your choice
+- Open Config.ini and set BaseUrl as well as APISecret > Save and close
+- Run Trayscout.exe, now you should see your blood glucose value in the system tray
+  - If not, an error window should pop up and tell you what's wrong
+
+Always display tray icon:
+- Right click on taskbar > Taskbar settings > Notification area > Select which icons appear on the taskbar
+- Enable Trayscout
+
+Run on startup:
+- Right click on Trayscout.exe > Create shortcut > Cut (CTRL+X)
+- Windows + R > shell:startup > Paste (CTRL+V)
+
+Customization:
+- If you like you can change the font/color and the alarm sound by editing or replacing the corresponding files
