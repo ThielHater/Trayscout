@@ -159,8 +159,8 @@ namespace Trayscout
                 entries = entries.Where(x => x.Timestamp >= minTimestamp).ToList();
                 _diagram = new GlucoseDiagram(_config, entries);
                 _diagram.LostFocus += CloseDiagram;
-                _diagram.Focus();
-                _diagram.ShowDialog();
+                _diagram.Show();
+                _diagram.Activate();
             }
         }
 
