@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -14,6 +16,16 @@ namespace Trayscout
         public bool UseColor { get; }
         public bool UseAlarm { get; }
         public int AlarmInterval { get; }
+        public int TimeRange { get; }
+        public BaseStyle Style { get; }
+
+        private IDictionary<StyleKey, Type> _styles = new Dictionary<StyleKey, Type>
+        {
+            { StyleKey.Light, typeof(LightStyle) },
+            { StyleKey.AndroidAPS, typeof(AndroidApsStyle) },
+            { StyleKey.xDrip, typeof(XDripStyle) },
+            { StyleKey.Dexcom, typeof(DexcomStyle) }
+        };
 
         public Configuration(Ini ini)
         {
@@ -29,6 +41,9 @@ namespace Trayscout
             UseColor = ini.ReadBool("Config", "UseColor");
             UseAlarm = ini.ReadBool("Config", "UseAlarm");
             AlarmInterval = ini.ReadInt("Config", "AlarmInterval");
+            TimeRange = Math.Min(ini.ReadInt("Config", "TimeRange"), 6);
+            StyleKey styleKey = ini.ReadEnum<StyleKey>("Config", "Style");
+            Style = (BaseStyle)Activator.CreateInstance(_styles[styleKey]);
         }
 
         private string Sha1(string input)

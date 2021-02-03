@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Text;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -18,7 +17,8 @@ namespace Trayscout
         private NotifyIcon _trayIcon;
         private Timer _timer;
         private DateTime _lastAlarm;
-        private Image _symbols;
+        private Bitmap _symbols;
+        private GlucoseDiagram _diagram;
 
         public NightscoutClient()
         {
@@ -54,7 +54,7 @@ namespace Trayscout
             return Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().GetName().CodeBase).LocalPath);
         }
 
-        private Image GetSymbols()
+        private Bitmap GetSymbols()
         {
             string dir = GetAppDirectory();
             string img = Path.Combine(dir, "Symbols.png");
@@ -62,7 +62,7 @@ namespace Trayscout
             if (!File.Exists(img))
                 throw new Exception("File not found: " + Path.GetFileName(img));
 
-            Image result = Image.FromFile(img);
+            Bitmap result = (Bitmap)Image.FromFile(img);
             return result;
         }
 
@@ -95,14 +95,18 @@ namespace Trayscout
 
         private Entry GetLatestEntry()
         {
-            HttpResponseMessage requestResult = _client.GetAsync("entries").Result;
+            return GetLatestEntries(1).First();
+        }
+
+        private IList<Entry> GetLatestEntries(int count)
+        {
+            HttpResponseMessage requestResult = _client.GetAsync("entries?count=" + count).Result;
             if (!requestResult.IsSuccessStatusCode)
                 throw new Exception("Nightscout API: HTTP " + (int)requestResult.StatusCode + " " + requestResult.StatusCode);
             string content = requestResult.Content.ReadAsStringAsync().Result;
             IList<string> lines = content.Replace("\r\n", "\n").Split('\n').ToList();
-            IList<Entry> entries = lines.Select(x => new Entry(x)).OrderByDescending(x => x.Timestamp).ToList();
-            Entry result = entries.First();
-            return result;
+            IList<Entry> entries = lines.Select(x => new Entry(x)).Distinct().OrderByDescending(x => x.Timestamp).ToList();
+            return entries;
         }
 
         private void SetIcon(Entry entry)
@@ -115,51 +119,49 @@ namespace Trayscout
 
                 using (Graphics g = Graphics.FromImage(bmp))
                 {
-                    int sourceOffsetY;
-                    if (!_config.UseColor)
-                    {
-                        sourceOffsetY = 0;
-                    }
-                    else
-                    {
-                        if (entry.Value >= _config.High)
-                            sourceOffsetY = 8;
-                        else if (entry.Value <= _config.Low)
-                            sourceOffsetY = 16;
-                        else
-                            sourceOffsetY = 24;
-                    }
+                    _config.Style.SetSymbolColor(_symbols, _config.UseColor, _config.Low, _config.High, entry.Value);
 
                     int destOffsetX = (3 - entry.Digits.Count) * 5;
 
                     for (int i = 0; i < entry.Digits.Count; i++)
                     {
-                        g.DrawImage(_symbols, new Rectangle(destOffsetX + i * 5, 8, 5, 8), new Rectangle(entry.Digits[i] * 5, sourceOffsetY, 5, 8), GraphicsUnit.Pixel);
+                        g.DrawImage(_symbols, new Rectangle(destOffsetX + i * 5, 8, 5, 8), new Rectangle(entry.Digits[i] * 5, 0, 5, 8), GraphicsUnit.Pixel);
                     }
 
                     if (entry.Trend != Trend.None)
                     {
-                        g.DrawImage(_symbols, new Rectangle(10, 0, 5, 8), new Rectangle((int)entry.Trend, sourceOffsetY, 5, 8), GraphicsUnit.Pixel);
+                        g.DrawImage(_symbols, new Rectangle(10, 0, 5, 8), new Rectangle((int)entry.Trend, 0, 5, 8), GraphicsUnit.Pixel);
                         if (entry.Trend == Trend.DoubleDown || entry.Trend == Trend.DoubleUp)
-                            g.DrawImage(_symbols, new Rectangle(5, 0, 5, 8), new Rectangle((int)entry.Trend, sourceOffsetY, 5, 8), GraphicsUnit.Pixel);
+                            g.DrawImage(_symbols, new Rectangle(5, 0, 5, 8), new Rectangle((int)entry.Trend, 0, 5, 8), GraphicsUnit.Pixel);
                     }
                 }
 
                 ico = Icon.FromHandle(bmp.GetHicon());
             }
 
-            if (_trayIcon != null)
-            {
-                _trayIcon.Visible = false;
-                _trayIcon.Dispose();
-            }
-
+            DisposeTrayIcon();
             _trayIcon = new NotifyIcon()
             {
                 Icon = ico,
                 ContextMenu = new ContextMenu(new MenuItem[] { new MenuItem("Exit", Exit) }),
                 Visible = true
             };
+            _trayIcon.Click += OpenGlucoseDiagram;
+        }
+
+        private void OpenGlucoseDiagram(object sender, EventArgs e)
+        {
+            if (_diagram == null)
+            {
+                IList<Entry> entries = GetLatestEntries(_config.TimeRange * 60);
+                DateTime maxTimestamp = entries.Max(x => x.Timestamp);
+                DateTime minTimestamp = maxTimestamp.AddHours(-(_config.TimeRange + 5));
+                entries = entries.Where(x => x.Timestamp >= minTimestamp).ToList();
+                _diagram = new GlucoseDiagram(_config, entries);
+                _diagram.LostFocus += CloseDiagram;
+                _diagram.Focus();
+                _diagram.ShowDialog();
+            }
         }
 
         private void SetAlarm(Entry entry)
@@ -180,16 +182,33 @@ namespace Trayscout
             }
         }
 
-        private void Exit(object sender, EventArgs e)
+        private void CloseDiagram(object sender, EventArgs e)
         {
-            _client?.Dispose();
+            if (_diagram != null)
+            {
+                _diagram.Close();
+                _diagram.Dispose();
+                _diagram = null;
+            }
+        }
+
+        private void DisposeTrayIcon()
+        {
             if (_trayIcon != null)
             {
                 _trayIcon.Visible = false;
+                _trayIcon.Click += OpenGlucoseDiagram;
                 _trayIcon.Dispose();
+                _trayIcon = null;
             }
+        }
+
+        private void Exit(object sender, EventArgs e)
+        {
             _timer?.Dispose();
+            _client?.Dispose();
             _symbols?.Dispose();
+            DisposeTrayIcon();
             Application.Exit();
         }
     }

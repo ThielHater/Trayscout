@@ -40,5 +40,13 @@ namespace Trayscout
             bool boolValue = value == "1";
             return boolValue;
         }
+
+        public T ReadEnum<T>(string section, string key) where T : struct
+        {
+            string value = ReadString(section, key);
+            if (!Enum.TryParse(value, out T enumValue))
+                throw new Exception(key + " is not valid.");
+            return enumValue;
+        }
     }
 }
