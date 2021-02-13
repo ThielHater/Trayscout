@@ -12,8 +12,8 @@ namespace Trayscout
         public Color LowColor { get; protected set; }
         public Color NormalColor { get; protected set; }
         public Color BackgroundColor { get; protected set; }
-        public Color HelpLinesColor { get; protected set; }
-        public Color AnnotationColor { get; protected set; }
+        public Color GridLinesColor { get; protected set; }
+        public Color LabelColor { get; protected set; }
         public int Radius { get; protected set; }
 
         public Image DrawDiagram(int width, int height, int high, int low, int timeRange, IList<Entry> entries)
@@ -33,9 +33,9 @@ namespace Trayscout
             int stepY = 100;
 
             DrawBackground(g, width, height);
-            DrawHelpLines(g, width, height, minX, maxX, stepX, minY, maxY, stepY);
+            DrawGridLines(g, width, height, minX, maxX, stepX, minY, maxY, stepY);
             DrawAreas(g, width, height, lowY, highY, alpha);
-            DrawNumbersAndDates(g, width, height, minX, maxX, stepX, minY, maxY, stepY, bmp);
+            DrawAxisLabels(g, width, height, minX, maxX, stepX, minY, maxY, stepY, bmp);
             DrawEntries(g, width, height, entries, low, high, minX, maxX, minY, maxY);
             DrawOuterBorder(g, width, height);
 
@@ -49,13 +49,13 @@ namespace Trayscout
             g.FillRectangle(new SolidBrush(BackgroundColor), 0, 0, width - 1, height - 1);
         }
 
-        protected virtual void DrawHelpLines(Graphics g, int width, int height, DateTime minX, DateTime maxX, int stepX, int minY, int maxY, int stepY)
+        protected virtual void DrawGridLines(Graphics g, int width, int height, DateTime minX, DateTime maxX, int stepX, int minY, int maxY, int stepY)
         {
             DateTime helpX = minX.AddMinutes(stepX);
             while (helpX < maxX)
             {
                 int x = (int)IntervalScale(minX.Ticks, maxX.Ticks, helpX.Ticks, 0, width - 1);
-                g.DrawLine(new Pen(HelpLinesColor), x, 0, x, height - 1);
+                g.DrawLine(new Pen(GridLinesColor), x, 0, x, height - 1);
                 helpX = helpX.AddMinutes(stepX);
             }
 
@@ -63,14 +63,14 @@ namespace Trayscout
             while (helpY < maxY)
             {
                 int y = (int)IntervalScale(minY, maxY, helpY, 0, height - 1);
-                g.DrawLine(new Pen(HelpLinesColor), 0, y, width - 1, y);
+                g.DrawLine(new Pen(GridLinesColor), 0, y, width - 1, y);
                 helpY += stepY;
             }
         }
 
         protected abstract void DrawAreas(Graphics g, int width, int height, int lowY, int highY, int alpha);
 
-        protected virtual void DrawNumbersAndDates(Graphics g, int width, int height, DateTime minX, DateTime maxX, int stepX, int minY, int maxY, int stepY, Bitmap bmp)
+        protected virtual void DrawAxisLabels(Graphics g, int width, int height, DateTime minX, DateTime maxX, int stepX, int minY, int maxY, int stepY, Bitmap bmp)
         {
             g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
 
@@ -80,7 +80,7 @@ namespace Trayscout
             while (helpX > minX)
             {
                 int x = (int)IntervalScale(minX.Ticks, maxX.Ticks, helpX.Ticks, 0, width - 1);
-                g.DrawString(helpX.ToString("HH:mm"), new Font("Calibri", 8), new SolidBrush(AnnotationColor), x - 32, height - 16, StringFormat.GenericDefault);
+                g.DrawString(helpX.ToString("HH:mm"), new Font("Calibri", 8), new SolidBrush(LabelColor), x - 32, height - 16, StringFormat.GenericDefault);
                 helpX = helpX.AddMinutes(-stepX);
             }
 
@@ -88,7 +88,7 @@ namespace Trayscout
             while (helpY < maxY)
             {
                 int y = (int)IntervalScale(minY, maxY, helpY, 0, height - 1);
-                g.DrawString(helpY.ToString(), new Font("Calibri", 8), new SolidBrush(AnnotationColor), 2, height - y - 16, StringFormat.GenericDefault);
+                g.DrawString(helpY.ToString(), new Font("Calibri", 8), new SolidBrush(LabelColor), 2, height - y - 16, StringFormat.GenericDefault);
                 helpY += stepY;
             }
             bmp.RotateFlip(RotateFlipType.RotateNoneFlipY);
@@ -100,7 +100,7 @@ namespace Trayscout
 
         protected virtual void DrawOuterBorder(Graphics g, int width, int height)
         {
-            g.DrawRectangle(new Pen(HelpLinesColor), 0, 0, width - 1, height - 1);
+            g.DrawRectangle(new Pen(GridLinesColor), 0, 0, width - 1, height - 1);
         }
 
         protected virtual Color GetGraphColor(int low, int high, int value)
@@ -122,7 +122,7 @@ namespace Trayscout
 
         public void SetSymbolColor(Bitmap symbols, bool useColor, int low, int high, int value)
         {
-            Color color = !useColor ? Color.White : GetColor(low, high, value);
+            Color color = !useColor || value == 0 ? Color.White : GetColor(low, high, value);
 
             for (int x = 0; x < symbols.Width; x++)
             {

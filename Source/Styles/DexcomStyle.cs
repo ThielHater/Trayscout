@@ -10,8 +10,8 @@ namespace Trayscout
             HighColor = Color.FromArgb(255, 210, 10);
             NormalColor = Color.Gray;
             BackgroundColor = Color.White;
-            HelpLinesColor = Color.Black;
-            AnnotationColor = Color.Black;
+            GridLinesColor = Color.Black;
+            LabelColor = Color.Black;
             Radius = 3;
         }
 

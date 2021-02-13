@@ -37,16 +37,16 @@ namespace Trayscout
 
                 _timer = new Timer();
                 _timer.Interval = 1000 * 60 * _config.UpdateInterval;
-                _timer.Tick += (x, y) => Update();
+                _timer.Tick += (x, y) => Update(false);
                 _timer.Enabled = true;
-
-                Update();
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 throw;
             }
+
+            Update(true);
         }
 
         private string GetAppDirectory()
@@ -78,19 +78,27 @@ namespace Trayscout
             return result;
         }
 
-        private void Update()
+        private void Update(bool firstRun)
         {
+            Entry entry;
             try
             {
-                Entry entry = GetLatestEntry();
-                SetIcon(entry);
-                SetAlarm(entry);
+                entry = GetLatestEntry();
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                throw;
+                if (ex is NightscoutException || firstRun)
+                {
+                    MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    throw;
+                }
+                else
+                {
+                    entry = new Entry(DateTime.Now, 0, Trend.Flat);
+                }
             }
+            SetIcon(entry);
+            SetAlarm(entry);
         }
 
         private Entry GetLatestEntry()
@@ -102,7 +110,7 @@ namespace Trayscout
         {
             HttpResponseMessage requestResult = _client.GetAsync("entries?count=" + count).Result;
             if (!requestResult.IsSuccessStatusCode)
-                throw new Exception("Nightscout API: HTTP " + (int)requestResult.StatusCode + " " + requestResult.StatusCode);
+                throw new NightscoutException("Nightscout API: HTTP " + (int)requestResult.StatusCode + " " + requestResult.StatusCode);
             string content = requestResult.Content.ReadAsStringAsync().Result;
             IList<string> lines = content.Replace("\r\n", "\n").Split('\n').ToList();
             IList<Entry> entries = lines.Select(x => new Entry(x)).Distinct().OrderByDescending(x => x.Timestamp).ToList();
@@ -153,7 +161,18 @@ namespace Trayscout
         {
             if (_diagram == null)
             {
-                IList<Entry> entries = GetLatestEntries(_config.TimeRange * 60);
+                IList<Entry> entries;
+                try
+                {
+                    entries = GetLatestEntries(_config.TimeRange * 60);
+                }
+                catch (Exception ex)
+                {
+                    while (ex.InnerException != null)
+                        ex = ex.InnerException;
+                    MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
                 DateTime maxTimestamp = entries.Max(x => x.Timestamp);
                 DateTime minTimestamp = maxTimestamp.AddHours(-(_config.TimeRange + 5));
                 entries = entries.Where(x => x.Timestamp >= minTimestamp).ToList();
@@ -166,7 +185,7 @@ namespace Trayscout
 
         private void SetAlarm(Entry entry)
         {
-            if (_config.UseAlarm && (entry.Value >= _config.High || entry.Value <= _config.Low) && DateTime.Now > _lastAlarm.AddMinutes(_config.AlarmInterval))
+            if (_config.UseAlarm && (entry.Value >= _config.High || entry.Value <= _config.Low) && (entry.Value == 0 || DateTime.Now > _lastAlarm.AddMinutes(_config.AlarmInterval)))
             {
                 string dir = GetAppDirectory();
                 string alarm = Path.Combine(dir, "Alarm.mp3");
