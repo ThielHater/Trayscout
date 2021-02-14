@@ -18,6 +18,10 @@ namespace Trayscout
         public int AlarmInterval { get; }
         public int TimeRange { get; }
         public BaseStyle Style { get; }
+        public int Width { get; set; }
+        public int Height { get; set; }
+        public string FontFamily { get; }
+        public int FontSize { get; set; }
 
         private IDictionary<StyleKey, Type> _styles = new Dictionary<StyleKey, Type>
         {
@@ -44,6 +48,10 @@ namespace Trayscout
             TimeRange = Math.Min(ini.ReadInt("Config", "TimeRange"), 6);
             StyleKey styleKey = ini.ReadEnum<StyleKey>("Config", "Style");
             Style = (BaseStyle)Activator.CreateInstance(_styles[styleKey]);
+            Width = ini.ReadInt("Config", "Width");
+            Height = ini.ReadInt("Config", "Height");
+            FontFamily = ini.ReadString("Config", "FontFamily");
+            FontSize = ini.ReadInt("Config", "FontSize");
         }
 
         private string Sha1(string input)

@@ -14,6 +14,10 @@ A simple INI file is used for configuration:
 - AlarmInterval = Alarm interval in minutes
 - Style = Diagram style to be used (xDrip, AndroidAPS, Dexcom or Light)
 - TimeRange = Time range of diagram in hours (maximum is 6)
+- Width = Width of diagram in pixel
+- Height = Height of diagram in pixel
+- FontFamily = Font family used for axis labels
+- FontSize = Font size used for axis labels
 
 How to use:
 - Extract the Trayscout.zip into a folder of your choice

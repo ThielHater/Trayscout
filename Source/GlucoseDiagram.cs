@@ -10,10 +10,15 @@ namespace Trayscout
         {
             InitializeComponent();
 
+            Width = config.Width;
+            Height = config.Height;
+            PictureBox.Width = config.Width;
+            PictureBox.Height = config.Height;
+
             Size screenSize = Screen.PrimaryScreen.WorkingArea.Size;
             Location = new Point(screenSize.Width - Width - 16, screenSize.Height - Height - 16);
 
-            PictureBox.Image = config.Style.DrawDiagram(PictureBox.Width, PictureBox.Height, config.High, config.Low, config.TimeRange, entries);
+            PictureBox.Image = config.Style.DrawDiagram(config, entries);
         }
     }
 }

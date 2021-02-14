@@ -16,7 +16,12 @@ namespace Trayscout
         public Color LabelColor { get; protected set; }
         public int Radius { get; protected set; }
 
-        public Image DrawDiagram(int width, int height, int high, int low, int timeRange, IList<Entry> entries)
+        public Image DrawDiagram(Configuration config, IList<Entry> entries)
+        {
+            return DrawDiagram(config.Width, config.Height, config.FontFamily, config.FontSize, config.High, config.Low, config.TimeRange, entries);
+        }
+
+        public Image DrawDiagram(int width, int height, string fontFamily, int fontSize, int high, int low, int timeRange, IList<Entry> entries)
         {
             Bitmap bmp = new Bitmap(width, height);
             Graphics g = Graphics.FromImage(bmp);
@@ -24,10 +29,10 @@ namespace Trayscout
             DateTime maxX = entries.Max(x => x.Timestamp);
             DateTime minX = maxX.AddHours(-timeRange);
             int minY = 0;
-            int maxY = Math.Max(entries.Max(x => x.Value) + 20, 400);
+            int maxY = Math.Max(entries.Max(x => x.Value) + (int)(height * 0.1f), 400);
             int highY = (int)IntervalScale(minY, maxY, high, 0, height - 1);
             int lowY = (int)IntervalScale(minY, maxY, low, 0, height - 1);
-            int alpha = (int)(256 * 0.20f);
+            int alpha = (int)(256 * 0.2f);
 
             int stepX = timeRange <= 3 ? 30 : 60;
             int stepY = 100;
@@ -35,7 +40,7 @@ namespace Trayscout
             DrawBackground(g, width, height);
             DrawGridLines(g, width, height, minX, maxX, stepX, minY, maxY, stepY);
             DrawAreas(g, width, height, lowY, highY, alpha);
-            DrawAxisLabels(g, width, height, minX, maxX, stepX, minY, maxY, stepY, bmp);
+            DrawAxisLabels(g, width, height, fontFamily, fontSize, minX, maxX, stepX, minY, maxY, stepY, bmp);
             DrawEntries(g, width, height, entries, low, high, minX, maxX, minY, maxY);
             DrawOuterBorder(g, width, height);
 
@@ -70,9 +75,10 @@ namespace Trayscout
 
         protected abstract void DrawAreas(Graphics g, int width, int height, int lowY, int highY, int alpha);
 
-        protected virtual void DrawAxisLabels(Graphics g, int width, int height, DateTime minX, DateTime maxX, int stepX, int minY, int maxY, int stepY, Bitmap bmp)
+        protected virtual void DrawAxisLabels(Graphics g, int width, int height, string fontFamily, int fontSize, DateTime minX, DateTime maxX, int stepX, int minY, int maxY, int stepY, Bitmap bmp)
         {
             g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
+            double fontScale = fontSize / 8.0f;
 
             // flipping because DrawString() does not work as intended (https://stackoverflow.com/a/1486019)
             bmp.RotateFlip(RotateFlipType.RotateNoneFlipY);
@@ -80,7 +86,7 @@ namespace Trayscout
             while (helpX > minX)
             {
                 int x = (int)IntervalScale(minX.Ticks, maxX.Ticks, helpX.Ticks, 0, width - 1);
-                g.DrawString(helpX.ToString("HH:mm"), new Font("Calibri", 8), new SolidBrush(LabelColor), x - 32, height - 16, StringFormat.GenericDefault);
+                g.DrawString(helpX.ToString("HH:mm"), new Font(fontFamily, fontSize), new SolidBrush(LabelColor), x - (int)(32 * fontScale), height - (int)(16 * fontScale), StringFormat.GenericDefault);
                 helpX = helpX.AddMinutes(-stepX);
             }
 
@@ -88,7 +94,7 @@ namespace Trayscout
             while (helpY < maxY)
             {
                 int y = (int)IntervalScale(minY, maxY, helpY, 0, height - 1);
-                g.DrawString(helpY.ToString(), new Font("Calibri", 8), new SolidBrush(LabelColor), 2, height - y - 16, StringFormat.GenericDefault);
+                g.DrawString(helpY.ToString(), new Font(fontFamily, fontSize), new SolidBrush(LabelColor), (int)(2 * fontScale), height - y - (int)(16 * fontScale), StringFormat.GenericDefault);
                 helpY += stepY;
             }
             bmp.RotateFlip(RotateFlipType.RotateNoneFlipY);
