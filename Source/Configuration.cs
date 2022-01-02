@@ -11,8 +11,9 @@ namespace Trayscout
         public string BaseUrl { get; }
         public string ApiSecretHash { get; }
         public int UpdateInterval { get; }
-        public int High { get; }
-        public int Low { get; }
+        public float High { get; }
+        public float Low { get; }
+        public Unit Unit { get; }
         public bool UseColor { get; }
         public bool UseAlarm { get; }
         public int AlarmInterval { get; }
@@ -40,8 +41,17 @@ namespace Trayscout
                 BaseUrl += "api/v1/";
             ApiSecretHash = Sha1(ini.ReadString("Config", "APISecret"));
             UpdateInterval = ini.ReadInt("Config", "UpdateInterval");
-            High = ini.ReadInt("Config", "High");
-            Low = ini.ReadInt("Config", "Low");
+            High = ini.ReadFloat("Config", "High");
+            Low = ini.ReadFloat("Config", "Low");
+            try
+            {
+                Unit = ini.ReadEnum<Unit>("Config", "Unit");
+            }
+            catch
+            {
+                // backward compatibility
+                Unit = Unit.mgdl;
+            }
             UseColor = ini.ReadBool("Config", "UseColor");
             UseAlarm = ini.ReadBool("Config", "UseAlarm");
             AlarmInterval = ini.ReadInt("Config", "AlarmInterval");

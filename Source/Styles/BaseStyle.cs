@@ -18,10 +18,10 @@ namespace Trayscout
 
         public Image DrawDiagram(Configuration config, IList<Entry> entries)
         {
-            return DrawDiagram(config.Width, config.Height, config.FontFamily, config.FontSize, config.High, config.Low, config.TimeRange, entries);
+            return DrawDiagram(config.Width, config.Height, config.FontFamily, config.FontSize, config.High, config.Low, config.TimeRange, entries, config.Unit);
         }
 
-        public Image DrawDiagram(int width, int height, string fontFamily, int fontSize, int high, int low, int timeRange, IList<Entry> entries)
+        public Image DrawDiagram(int width, int height, string fontFamily, int fontSize, float high, float low, int timeRange, IList<Entry> entries, Unit unit)
         {
             Bitmap bmp = new Bitmap(width, height);
             Graphics g = Graphics.FromImage(bmp);
@@ -29,13 +29,13 @@ namespace Trayscout
             DateTime maxX = entries.Max(x => x.Timestamp);
             DateTime minX = maxX.AddHours(-timeRange);
             int minY = 0;
-            int maxY = Math.Max(entries.Max(x => x.Value) + (int)(height * 0.1f), 400);
+            int maxY = Math.Max((int)entries.Max(x => x.Value), unit == Unit.mmolL ? 20 : 400);
             int highY = (int)IntervalScale(minY, maxY, high, 0, height - 1);
             int lowY = (int)IntervalScale(minY, maxY, low, 0, height - 1);
             int alpha = (int)(256 * 0.2f);
 
             int stepX = timeRange <= 3 ? 30 : 60;
-            int stepY = 100;
+            int stepY = unit == Unit.mmolL ? 5 : 100;
 
             DrawBackground(g, width, height);
             DrawGridLines(g, width, height, minX, maxX, stepX, minY, maxY, stepY);
@@ -102,19 +102,19 @@ namespace Trayscout
             g.TextRenderingHint = TextRenderingHint.SystemDefault;
         }
 
-        protected abstract void DrawEntries(Graphics g, int width, int height, IList<Entry> entries, int low, int high, DateTime minX, DateTime maxX, int minY, int maxY);
+        protected abstract void DrawEntries(Graphics g, int width, int height, IList<Entry> entries, float low, float high, DateTime minX, DateTime maxX, int minY, int maxY);
 
         protected virtual void DrawOuterBorder(Graphics g, int width, int height)
         {
             g.DrawRectangle(new Pen(GridLinesColor), 0, 0, width - 1, height - 1);
         }
 
-        protected virtual Color GetGraphColor(int low, int high, int value)
+        protected virtual Color GetGraphColor(float low, float high, float value)
         {
             return GetColor(low, high, value);
         }
 
-        public Color GetColor(int low, int high, int value)
+        public Color GetColor(float low, float high, float value)
         {
             Color result;
             if (value >= high)
@@ -126,7 +126,7 @@ namespace Trayscout
             return result;
         }
 
-        public void SetSymbolColor(Bitmap symbols, bool useColor, int low, int high, int value)
+        public void SetSymbolColor(Bitmap symbols, bool useColor, float low, float high, float value)
         {
             Color color = !useColor || value == 0 ? Color.White : GetColor(low, high, value);
 

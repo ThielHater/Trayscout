@@ -7,8 +7,9 @@ A simple INI file is used for configuration:
 - BaseUrl = URL of your Nightscout instance
 - APISecret = API secret of your Nightscout instance
 - UpdateInterval = Blood glucose update interval in minutes
-- High = Upper limit of your normal range
-- Low = Lower limit of your normal range
+- High = Upper limit of your normal range (for example 200 or 11.1)
+- Low = Lower limit of your normal range (for example 80 or 4.4)
+- Unit = Unit to be used (mgdl or mmolL, without /)
 - UseColor = Whether to use different colors based on blood glucose value instead of white
 - UseAlarm = Whether to play an alarm sound when out of normal range
 - AlarmInterval = Alarm interval in minutes

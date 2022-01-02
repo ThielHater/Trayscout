@@ -15,7 +15,7 @@ namespace Trayscout
             Radius = 2;
         }
 
-        protected override Color GetGraphColor(int low, int high, int value)
+        protected override Color GetGraphColor(float low, float high, float value)
         {
             return Color.Black;
         }

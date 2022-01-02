@@ -7,7 +7,7 @@ namespace Trayscout
 {
     public abstract class DotStyle : BaseStyle
     {
-        protected override void DrawEntries(Graphics g, int width, int height, IList<Entry> entries, int low, int high, DateTime minX, DateTime maxX, int minY, int maxY)
+        protected override void DrawEntries(Graphics g, int width, int height, IList<Entry> entries, float low, float high, DateTime minX, DateTime maxX, int minY, int maxY)
         {
             g.SmoothingMode = SmoothingMode.HighQuality;
 

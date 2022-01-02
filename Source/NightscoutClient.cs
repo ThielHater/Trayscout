@@ -19,6 +19,7 @@ namespace Trayscout
         private DateTime _lastAlarm;
         private Bitmap _symbols;
         private GlucoseDiagram _diagram;
+        private bool _diagramOpened;
 
         public NightscoutClient()
         {
@@ -89,12 +90,14 @@ namespace Trayscout
             {
                 if (ex is NightscoutException || firstRun)
                 {
+                    while (ex.InnerException != null)
+                        ex = ex.InnerException;
                     MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     throw;
                 }
                 else
                 {
-                    entry = new Entry(DateTime.Now, 0, Trend.Flat);
+                    entry = new Entry(DateTime.Now, 0, _config.Unit, Trend.Flat);
                 }
             }
             SetIcon(entry);
@@ -113,7 +116,7 @@ namespace Trayscout
                 throw new NightscoutException("Nightscout API: HTTP " + (int)requestResult.StatusCode + " " + requestResult.StatusCode);
             string content = requestResult.Content.ReadAsStringAsync().Result;
             IList<string> lines = content.Replace("\r\n", "\n").Split('\n').ToList();
-            IList<Entry> entries = lines.Select(x => new Entry(x)).Distinct().OrderByDescending(x => x.Timestamp).ToList();
+            IList<Entry> entries = lines.Select(x => new Entry(x, _config.Unit)).Distinct().OrderByDescending(x => x.Timestamp).ToList();
             return entries;
         }
 
@@ -159,8 +162,9 @@ namespace Trayscout
 
         private void OpenGlucoseDiagram(object sender, EventArgs e)
         {
-            if (_diagram == null)
+            if (!_diagramOpened)
             {
+                _diagramOpened = true;
                 IList<Entry> entries;
                 try
                 {
@@ -203,12 +207,10 @@ namespace Trayscout
 
         private void CloseDiagram(object sender, EventArgs e)
         {
-            if (_diagram != null)
-            {
-                _diagram.Close();
-                _diagram.Dispose();
-                _diagram = null;
-            }
+            _diagram.Close();
+            _diagram.Dispose();
+            _diagram = null;
+            _diagramOpened = false;
         }
 
         private void DisposeTrayIcon()

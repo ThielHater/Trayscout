@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -32,6 +33,14 @@ namespace Trayscout
             if (!int.TryParse(value, out int intValue))
                 throw new Exception(key + " is not an integer.");
             return intValue;
+        }
+
+        public float ReadFloat(string section, string key)
+        {
+            string value = ReadString(section, key);
+            if (!float.TryParse(value, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out float floatValue))
+                throw new Exception(key + " is not a floating point number.");
+            return floatValue;
         }
 
         public bool ReadBool(string section, string key)
