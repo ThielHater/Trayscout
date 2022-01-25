@@ -38,7 +38,7 @@ namespace Trayscout
 
         private IList<short> GetDigits(float value, Unit unit)
         {
-            string stringValue = value.ToString(unit == Unit.mmolL ? "F1" : "F0", CultureInfo.InvariantCulture);
+            string stringValue = value.ToString(unit == Unit.mmolL && value < 10.0f ? "F1" : "F0", CultureInfo.InvariantCulture);
             IList<short> digits = stringValue.Select(x => x == '.' ? (short)15 : (short)(x - 48)).ToList();
             return digits;
         }
