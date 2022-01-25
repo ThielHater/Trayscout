@@ -132,11 +132,14 @@ namespace Trayscout
                 {
                     _config.Style.SetSymbolColor(_symbols, _config.UseColor, _config.Low, _config.High, entry.Value);
 
-                    int destOffsetX = (3 - entry.Digits.Count) * 5;
+                    int destOffsetX = Math.Max((3 - entry.Digits.Count) * 5, 0);
+                    bool useGap = entry.Digits.Count <= 3;
 
                     for (int i = 0; i < entry.Digits.Count; i++)
                     {
-                        g.DrawImage(_symbols, new Rectangle(destOffsetX + i * 5, 8, 5, 8), new Rectangle(entry.Digits[i] * 5, 0, 5, 8), GraphicsUnit.Pixel);
+                        g.DrawImage(_symbols, new Rectangle(destOffsetX + i * 4, 8, 4, 8), new Rectangle(entry.Digits[i] * 4, 0, 4, 8), GraphicsUnit.Pixel);
+                        if (useGap)
+                            destOffsetX++;
                     }
 
                     if (entry.Trend != Trend.None)
