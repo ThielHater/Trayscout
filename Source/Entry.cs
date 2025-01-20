@@ -14,18 +14,34 @@ namespace Trayscout
 
         public Entry(string line, Unit unit)
         {
-            IList<string> split = line.Split('\t').Select(x => x.Trim('"')).ToList();
-            Timestamp = DateTime.Parse(split[0]);
-            int value = int.Parse(split[2]);
-            // Nightscout always uses mg/dl even if DISPLAY_UNITS is set to mmol/L
-            if (unit == Unit.mgdl)
-                Value = value;
-            if (unit == Unit.mmolL)
-                Value = value * 0.0555f;
-            Digits = GetDigits(Value, unit);
-            if (!Enum.TryParse(split[3], out Trend trend))
-                trend = Trend.None;
-            Trend = trend;
+            try
+            {
+                IList<string> split = line.Split('\t').Select(x => x.Trim('"')).ToList();
+                try
+                {
+                    Timestamp = DateTime.Parse(split[0]);
+                }
+                catch
+                {
+                    long unixTimestamp = long.Parse(split[1]) / 1000;
+                    DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                    Timestamp = epoch.AddSeconds(unixTimestamp);
+                }
+                int value = int.Parse(split[2]);
+                // Nightscout always uses mg/dl even if DISPLAY_UNITS is set to mmol/L
+                if (unit == Unit.mgdl)
+                    Value = value;
+                if (unit == Unit.mmolL)
+                    Value = value * 0.0555f;
+                Digits = GetDigits(Value, unit);
+                if (!Enum.TryParse(split[3], out Trend trend))
+                    trend = Trend.None;
+                Trend = trend;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Parsing entry '" + line + "' failed.", ex);
+            }
         }
 
         public Entry(DateTime timestamp, float value, Unit unit, Trend trend)

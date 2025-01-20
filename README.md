@@ -11,7 +11,7 @@ A simple INI file is used for configuration:
 - Low = Lower limit of your normal range (for example 80 or 4.4)
 - Unit = Unit to be used (mgdl or mmolL, without /)
 - UseColor = Whether to use different colors based on blood glucose value instead of white
-- UseAlarm = Whether to play an alarm sound when out of normal range
+- UseAlarm = Whether to play an alarm sound when out of normal range (to use, place your custom Alarm.mp3 in the Trayscout folder)
 - AlarmInterval = Alarm interval in minutes
 - Style = Diagram style to be used (xDrip, AndroidAPS, Dexcom or Light)
 - TimeRange = Time range of diagram in hours (maximum is 6)
